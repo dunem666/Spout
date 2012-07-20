@@ -416,9 +416,4 @@ public class SpoutBlock implements Block {
 	public void setCollisionShape(CollisionShape collision) {
 		this.collision = collision;
 	}
-
-	@Override
-	public Vector3 getSpoutCollisionOffset() {
-		return MathHelper.toVector3(getCollisionOffset());
-	}
 }

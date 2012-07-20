@@ -1325,6 +1325,6 @@ public class SpoutRegion extends Region {
 
 	@Override
 	public VoxelInfo getCollisionShapeAt(int x, int y, int z) {
-		return new SpoutVoxelInfo(getBlockMaterial(x, y, z)); //TODO correct?
+		return getBlock(x, y, z, null); //TODO Correct?
 	}
 }
