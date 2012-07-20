@@ -201,8 +201,7 @@ public class SpoutRegion extends Region {
 	private Vector3 gravity;
 
 	public SpoutRegion(SpoutWorld world, float x, float y, float z, RegionSource source) {
-		this(world, x, y, z, source, LoadOption
-				.NO_LOAD);
+		this(world, x, y, z, source, LoadOption.NO_LOAD);
 	}
 
 	public SpoutRegion(SpoutWorld world, float x, float y, float z, RegionSource source, LoadOption loadopt) {
@@ -264,7 +263,7 @@ public class SpoutRegion extends Region {
 		SpoutVoxelWorldShape floorShape = new SpoutVoxelWorldShape(this);
 		//Set the shape
 		regionObject.setCollisionShape(floorShape);
-		//Simulate the shape in the dyanmics world
+		//Simulate the shape in the dynamics world
 		dynamicsWorld.addCollisionObject(regionObject);
 		//apply gravity
 		setGravity(new Vector3(0, 9.8F, 0));
