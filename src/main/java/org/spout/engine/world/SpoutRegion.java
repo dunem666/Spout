@@ -610,6 +610,7 @@ public class SpoutRegion extends Region {
 				old.kill();
 			}
 		}
+		this.dynamicsWorld.addRigidBody(e.getBody());
 		this.allocate((SpoutEntity) e);
 	}
 
@@ -619,6 +620,7 @@ public class SpoutRegion extends Region {
 		if (be == e) {
 			blockEntities.remove(pos);
 		}
+		this.dynamicsWorld.removeRigidBody(e.getBody());
 		this.deallocate((SpoutEntity)e);
 	}
 

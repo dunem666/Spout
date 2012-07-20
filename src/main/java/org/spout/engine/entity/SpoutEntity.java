@@ -26,6 +26,8 @@
  */
 package org.spout.engine.entity;
 
+import javax.vecmath.Quat4f;
+import javax.vecmath.Vector3f;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,6 +35,10 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+
+import com.bulletphysics.collision.shapes.BoxShape;
+import com.bulletphysics.dynamics.RigidBody;
+import com.bulletphysics.linearmath.MotionState;
 
 import org.spout.api.Source;
 import org.spout.api.Spout;
@@ -64,6 +70,7 @@ import org.spout.engine.world.SpoutRegion;
 
 public class SpoutEntity extends Tickable implements Entity {
 	public static final int NOTSPAWNEDID = -1;
+	private static final BoxShape DEFAULT_BODY = new BoxShape(new Vector3f(2, 2, 2));
 	//Thread-safe
 	private final AtomicReference<EntityManager> entityManagerLive;
 	private final AtomicReference<Controller> controllerLive;
@@ -86,6 +93,7 @@ public class SpoutEntity extends Tickable implements Entity {
 	private Model model;
 	private Thread owningThread;
 	private Transform lastTransform = transform;
+	private RigidBody body;
 
 	public SpoutEntity(SpoutEngine engine, Transform transform, Controller controller, int viewDistance, UUID uid, boolean load) {
 		id.set(NOTSPAWNEDID);
@@ -122,6 +130,10 @@ public class SpoutEntity extends Tickable implements Entity {
 				setObserver(true);
 			}
 		}
+
+		//TODO Testing, need better defaults
+		//1f is mass, needs to be changed or given a valid default
+		this.body = new RigidBody(1F, new EntityMotionState(this), DEFAULT_BODY);
 	}
 
 	public SpoutEntity(SpoutEngine engine, Transform transform, Controller controller, int viewDistance) {
@@ -733,5 +745,43 @@ public class SpoutEntity extends Tickable implements Entity {
 	@Override
 	public UUID getUID() {
 		return uid;
+	}
+
+	@Override
+	public void setBody(RigidBody body) {
+		if (body == null) {
+			throw new NullPointerException("Entities' rigid body cannot be null!");
+		}
+		this.body = body;
+	}
+
+	@Override
+	public RigidBody getBody() {
+		return body;
+	}
+
+	private class EntityMotionState extends MotionState {
+		final SpoutEntity parent;
+
+		EntityMotionState(SpoutEntity parent) {
+			this.parent = parent;
+		}
+
+		@Override
+		public com.bulletphysics.linearmath.Transform getWorldTransform(com.bulletphysics.linearmath.Transform out) {
+			out.setRotation(MathHelper.toQuaternionf(parent.getRotation()));
+			Vector3 pos = parent.getPosition();
+			out.origin.x = pos.getX();
+			out.origin.y = pos.getY();
+			out.origin.z = pos.getZ();
+			return out;
+		}
+
+		@Override
+		public void setWorldTransform(com.bulletphysics.linearmath.Transform worldTrans) {
+			parent.setPosition(new Point(MathHelper.toVector3(worldTrans.origin), parent.getWorld()));
+			Quat4f identity = new Quat4f();
+			parent.setRotation(MathHelper.toQuaternion(worldTrans.getRotation(identity)));
+		}
 	}
 }
