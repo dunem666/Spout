@@ -26,6 +26,11 @@
  */
 package org.spout.engine.world;
 
+import javax.vecmath.Matrix3f;
+import javax.vecmath.Matrix4f;
+import javax.vecmath.Quat4f;
+import javax.vecmath.Vector3f;
+
 import gnu.trove.iterator.TIntIterator;
 
 import java.io.File;
@@ -59,6 +64,7 @@ import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.dynamics.constraintsolver.ConstraintSolver;
 import com.bulletphysics.dynamics.constraintsolver.SequentialImpulseConstraintSolver;
 import com.bulletphysics.linearmath.DefaultMotionState;
+import com.bulletphysics.linearmath.Transform;
 
 import org.spout.api.Source;
 import org.spout.api.Spout;
@@ -261,12 +267,14 @@ public class SpoutRegion extends Region {
 		dynamicsWorld = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
 		//Create the shape for the region
 		SpoutVoxelWorldShape floorShape = new SpoutVoxelWorldShape(this);
+		//Create the motion state of the ground
+		DefaultMotionState groundState = new DefaultMotionState(new Transform(new Matrix4f(new Quat4f(0, 0, 0, 1), new Vector3f(0, -1, 0), 0)));
 		//Create a collision object for this region
-		RigidBody regionObject = new RigidBody(0, new DefaultMotionState(), floorShape);
+		RigidBody regionBody = new RigidBody(0, groundState, floorShape);
 		//Simulate the shape in the dynamics world
-		dynamicsWorld.addCollisionObject(regionObject);
+		dynamicsWorld.addRigidBody(regionBody);
 		//apply gravity
-		setGravity(new Vector3(0, 9.8F, 0));
+		setGravity(new Vector3(0, -10, 0));
 	}
 
 	@Override
@@ -734,7 +742,8 @@ public class SpoutRegion extends Region {
 							}
 						}
 					}
-	                this.dynamicsWorld.stepSimulation(dt);
+					Spout.log("To simulate: " + dynamicsWorld.getNumCollisionObjects());
+	                this.dynamicsWorld.stepSimulation(dt, 3);
 					for (SpoutEntity ent : resolvers) {
 						try {
 							ent.resolve();
