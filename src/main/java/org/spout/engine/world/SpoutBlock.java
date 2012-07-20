@@ -60,8 +60,11 @@ public class SpoutBlock implements Block {
 	private final WeakReference<World> world;
 	private final Source source;
 	private final AtomicReference<WeakReference<Chunk>> chunk;
-	//Collisions
-	private CollisionShape collision;
+
+	//TODO Should the following be made atomic for thread safety?
+
+	//Collisions, by default blocks don't have one
+	private CollisionShape collision = null;
 	//Can it be collided with at all
 	private boolean collidable = true;
 	//Can it collide rigid bodies
@@ -391,7 +394,7 @@ public class SpoutBlock implements Block {
 
 	@Override
 	public Vector3f getCollisionOffset() {
-		return null;
+		return null; //TODO this
 	}
 
 	@Override
