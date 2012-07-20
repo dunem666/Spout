@@ -70,7 +70,7 @@ import org.spout.engine.world.SpoutRegion;
 
 public class SpoutEntity extends Tickable implements Entity {
 	public static final int NOTSPAWNEDID = -1;
-	private static final BoxShape DEFAULT_BODY = new BoxShape(new Vector3f(2, 2, 2));
+	private static final BoxShape DEFAULT_BODY = new BoxShape(new Vector3f(2f, 2f, 2f));
 	//Thread-safe
 	private final AtomicReference<EntityManager> entityManagerLive;
 	private final AtomicReference<Controller> controllerLive;

@@ -55,8 +55,10 @@ import com.bulletphysics.collision.dispatch.DefaultCollisionConfiguration;
 import com.bulletphysics.collision.shapes.voxel.VoxelInfo;
 import com.bulletphysics.dynamics.DiscreteDynamicsWorld;
 import com.bulletphysics.dynamics.DynamicsWorld;
+import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.dynamics.constraintsolver.ConstraintSolver;
 import com.bulletphysics.dynamics.constraintsolver.SequentialImpulseConstraintSolver;
+import com.bulletphysics.linearmath.DefaultMotionState;
 
 import org.spout.api.Source;
 import org.spout.api.Spout;
@@ -257,12 +259,10 @@ public class SpoutRegion extends Region {
 		broadphase = new DbvtBroadphase();
 		solver = new SequentialImpulseConstraintSolver();
 		dynamicsWorld = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-		//Create a collision object for this region
-		CollisionObject regionObject = new CollisionObject();
 		//Create the shape for the region
 		SpoutVoxelWorldShape floorShape = new SpoutVoxelWorldShape(this);
-		//Set the shape
-		regionObject.setCollisionShape(floorShape);
+		//Create a collision object for this region
+		RigidBody regionObject = new RigidBody(0, new DefaultMotionState(), floorShape);
 		//Simulate the shape in the dynamics world
 		dynamicsWorld.addCollisionObject(regionObject);
 		//apply gravity
