@@ -47,6 +47,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
+import com.bulletphysics.collision.shapes.voxel.VoxelInfo;
+
 import org.spout.api.Source;
 import org.spout.api.Spout;
 import org.spout.api.entity.Entity;
@@ -100,7 +102,7 @@ import org.spout.engine.world.dynamic.DynamicBlockUpdateTree;
 import org.spout.engine.world.physics.PhysicsQueue;
 import org.spout.engine.world.physics.UpdateQueue;
 
-public class SpoutRegion extends Region{
+public class SpoutRegion extends Region {
 	private AtomicInteger numberActiveChunks = new AtomicInteger();
 	// Can't extend AsyncManager and Region
 	private final SpoutRegionManager manager;
@@ -1319,5 +1321,10 @@ public class SpoutRegion extends Region{
 
 	public void addSnapshotFuture(SpoutChunkSnapshotFuture future) {
 		snapshotQueue.add(future);
+	}
+
+	@Override
+	public VoxelInfo getCollisionShapeAt(int x, int y, int z) {
+		return new SpoutVoxelInfo(getBlockMaterial(x, y, z)); //TODO correct?
 	}
 }
