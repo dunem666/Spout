@@ -47,7 +47,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
+import com.bulletphysics.collision.broadphase.BroadphaseInterface;
+import com.bulletphysics.collision.broadphase.DbvtBroadphase;
+import com.bulletphysics.collision.dispatch.CollisionDispatcher;
+import com.bulletphysics.collision.dispatch.CollisionObject;
+import com.bulletphysics.collision.dispatch.DefaultCollisionConfiguration;
 import com.bulletphysics.collision.shapes.voxel.VoxelInfo;
+import com.bulletphysics.collision.shapes.voxel.VoxelWorldShape;
+import com.bulletphysics.dynamics.DiscreteDynamicsWorld;
+import com.bulletphysics.dynamics.DynamicsWorld;
+import com.bulletphysics.dynamics.constraintsolver.ConstraintSolver;
+import com.bulletphysics.dynamics.constraintsolver.SequentialImpulseConstraintSolver;
 
 import org.spout.api.Source;
 import org.spout.api.Spout;
@@ -183,6 +193,14 @@ public class SpoutRegion extends Region {
 	private final DynamicBlockUpdateTree dynamicBlockTree;
 	private List<DynamicBlockUpdate> multiRegionUpdates = null;
 
+	//Bullet physics
+	private final DynamicsWorld dynamicsWorld;
+	private final BroadphaseInterface broadphase;
+	private final CollisionDispatcher dispatcher;
+	private final ConstraintSolver solver;
+	private final DefaultCollisionConfiguration collisionConfiguration;
+	private Vector3 gravity;
+
 	public SpoutRegion(SpoutWorld world, float x, float y, float z, RegionSource source) {
 		this(world, x, y, z, source, LoadOption.NO_LOAD);
 	}
@@ -233,6 +251,23 @@ public class SpoutRegion extends Region {
 			throw new IllegalStateException("AsyncExecutor should be instance of Thread");
 		}
 		taskManager = new SpoutTaskManager(world.getEngine().getScheduler(), false, t, world.getAge());
+
+		//Init physics
+		collisionConfiguration = new DefaultCollisionConfiguration();
+		dispatcher = new CollisionDispatcher(collisionConfiguration);
+		broadphase = new DbvtBroadphase();
+		solver = new SequentialImpulseConstraintSolver();
+		dynamicsWorld = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+		//Create a collision object for this region
+		CollisionObject regionObject = new CollisionObject();
+		//Create the shape for the region
+		SpoutVoxelWorldShape floorShape = new SpoutVoxelWorldShape(this);
+		//Set the shape
+		regionObject.setCollisionShape(floorShape);
+		//Simulate the shape in the dyanmics world
+		dynamicsWorld.addCollisionObject(regionObject);
+		//apply gravity
+		setGravity(new Vector3(0, 9.8F, 0));
 	}
 
 	@Override
@@ -589,6 +624,7 @@ public class SpoutRegion extends Region {
 	}
 
 	public void startTickRun(int stage, long delta) {
+		final float dt = delta / 1000.f;
 		boolean visibleToPlayers = this.entityManager.getPlayers().size() > 0;
 		if (!visibleToPlayers) {
 			//Search for players near to the center of the region
@@ -604,7 +640,6 @@ public class SpoutRegion extends Region {
 				Profiler.start("startTickRun stage 1");
 				try {
 					taskManager.heartbeat(delta);
-					float dt = delta / 1000.f;
 					Profiler.start("tick entities");
 					//Update all entities
 					for (SpoutEntity ent : entityManager) {
@@ -698,7 +733,7 @@ public class SpoutRegion extends Region {
 							}
 						}
 					}
-	
+	                this.dynamicsWorld.stepSimulation(dt);
 					for (SpoutEntity ent : resolvers) {
 						try {
 							ent.resolve();
@@ -1326,5 +1361,9 @@ public class SpoutRegion extends Region {
 	@Override
 	public VoxelInfo getCollisionShapeAt(int x, int y, int z) {
 		return getBlock(x, y, z, null); //TODO Correct?
+	}
+
+	public void setGravity(Vector3 gravity) {
+		this.gravity = gravity;
 	}
 }
