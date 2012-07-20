@@ -237,7 +237,7 @@ public class SpoutClient extends SpoutEngine implements Client {
 					BlockMaterial m = snap.getBlockMaterial(x, y, z);
 
 					Color col = getColor(m);
-					if (m.isSolid()) {
+					if (m.getCollisionShape() != null) { //TODO Roy, you will need to figure something out here
 						batch.addCube(new Vector3(x, y, z), Vector3.ONE, col, sides);
 					}
 				}
@@ -419,9 +419,10 @@ public class SpoutClient extends SpoutEngine implements Client {
 	}
 
 	private Color getColor(BlockMaterial m) {
-		if (!m.isSolid()) {
-			return new Color(0, 0, 0);
-		}
+		//TODO Here as well Roy
+//		if (!m.isSolid()) {
+//			return new Color(0, 0, 0);
+//		}
 		switch (m.getId()) {
 			case 78:
 				return new Color(255, 255, 255);
