@@ -53,7 +53,6 @@ import com.bulletphysics.collision.dispatch.CollisionDispatcher;
 import com.bulletphysics.collision.dispatch.CollisionObject;
 import com.bulletphysics.collision.dispatch.DefaultCollisionConfiguration;
 import com.bulletphysics.collision.shapes.voxel.VoxelInfo;
-import com.bulletphysics.collision.shapes.voxel.VoxelWorldShape;
 import com.bulletphysics.dynamics.DiscreteDynamicsWorld;
 import com.bulletphysics.dynamics.DynamicsWorld;
 import com.bulletphysics.dynamics.constraintsolver.ConstraintSolver;
@@ -202,7 +201,8 @@ public class SpoutRegion extends Region {
 	private Vector3 gravity;
 
 	public SpoutRegion(SpoutWorld world, float x, float y, float z, RegionSource source) {
-		this(world, x, y, z, source, LoadOption.NO_LOAD);
+		this(world, x, y, z, source, LoadOption
+				.NO_LOAD);
 	}
 
 	public SpoutRegion(SpoutWorld world, float x, float y, float z, RegionSource source, LoadOption loadopt) {
@@ -1360,7 +1360,11 @@ public class SpoutRegion extends Region {
 
 	@Override
 	public VoxelInfo getCollisionShapeAt(int x, int y, int z) {
-		return getBlock(x, y, z, null); //TODO Correct?
+		return getBlockMaterial(x, y, z);
+	}
+
+	public Vector3 getGravity() {
+		return gravity;
 	}
 
 	public void setGravity(Vector3 gravity) {

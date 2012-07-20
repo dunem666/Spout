@@ -376,44 +376,4 @@ public class SpoutBlock implements Block {
 	public boolean isMaterial(Material... materials) {
 		return LogicUtil.equalsAny(this.getMaterial(), (Object[]) materials);
 	}
-
-	@Override
-	public boolean isColliding() {
-		return collidable;
-	}
-
-	@Override
-	public Object getUserData() {
-		return getPosition(); //TODO Only position?
-	}
-
-	@Override
-	public CollisionShape getCollisionShape() {
-		return collision;
-	}
-
-	@Override
-	public Vector3f getCollisionOffset() {
-		return null; //TODO this
-	}
-
-	@Override
-	public boolean isBlocking() {
-		return blockable;
-	}
-
-	@Override
-	public void setColliding(boolean collidable) {
-		this.collidable = collidable;
-	}
-
-	@Override
-	public void setBlocking(boolean blockable) {
-		this.blockable = blockable;
-	}
-
-	@Override
-	public void setCollisionShape(CollisionShape collision) {
-		this.collision = collision;
-	}
 }
