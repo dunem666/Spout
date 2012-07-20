@@ -313,9 +313,6 @@ public class SpoutChunk extends Chunk {
 			material = blockEvent.getSnapshot().getMaterial();
 			data = blockEvent.getSnapshot().getData();
 			//TODO correct area?
-			block.setCollisionShape(material.getCollisionShape());
-			block.setColliding(material.hasCollision());
-			block.setBlocking(material.hasBodyCollision());
 		}
 
 
