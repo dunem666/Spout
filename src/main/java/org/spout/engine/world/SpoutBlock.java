@@ -26,8 +26,11 @@
  */
 package org.spout.engine.world;
 
+import javax.vecmath.Vector3f;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicReference;
+
+import com.bulletphysics.collision.shapes.CollisionShape;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.spout.api.Source;
@@ -57,7 +60,13 @@ public class SpoutBlock implements Block {
 	private final WeakReference<World> world;
 	private final Source source;
 	private final AtomicReference<WeakReference<Chunk>> chunk;
-	
+	//Collisions
+	private CollisionShape collision;
+	//Can it be collided with at all
+	private boolean collidable = true;
+	//Can it collide rigid bodies
+	private boolean blockable = false;
+
 	public SpoutBlock(World world, int x, int y, int z, Source source) {
 		this(world, x, y, z, world.getChunkFromBlock(x, y, z, LoadOption.LOAD_GEN), source);
 	}
@@ -363,5 +372,46 @@ public class SpoutBlock implements Block {
 	@Override
 	public boolean isMaterial(Material... materials) {
 		return LogicUtil.equalsAny(this.getMaterial(), (Object[]) materials);
+	}
+
+	@Override
+	public boolean isColliding() {
+		return collidable;
+	}
+
+	@Override
+	public Object getUserData() {
+		return getPosition(); //TODO Only position?
+	}
+
+	@Override
+	public CollisionShape getCollisionShape() {
+		return collision;
+	}
+
+	@Override
+	public Vector3f getCollisionOffset() {
+		return null;
+	}
+
+	@Override
+	public boolean isBlocking() {
+		return blockable;
+	}
+
+	public void setColliding(boolean collidable) {
+		this.collidable = collidable;
+	}
+
+	public void setBlocking(boolean blockable) {
+		this.blockable = blockable;
+	}
+
+	public void setCollisionShape(CollisionShape collision) {
+		this.collision = collision;
+	}
+
+	public Vector3 getSpoutCollisionOffset() {
+		return MathHelper.toVector3(getCollisionOffset());
 	}
 }
