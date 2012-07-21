@@ -207,6 +207,7 @@ public class SpoutRegion extends Region {
 	private final ConstraintSolver solver;
 	private final DefaultCollisionConfiguration collisionConfiguration;
 	private Vector3 gravity;
+	private long dt = 0;
 
 	public SpoutRegion(SpoutWorld world, float x, float y, float z, RegionSource source) {
 		this(world, x, y, z, source, LoadOption.NO_LOAD);
@@ -618,7 +619,10 @@ public class SpoutRegion extends Region {
 				old.kill();
 			}
 		}
-		this.dynamicsWorld.addRigidBody(e.getBody());
+		RigidBody body = e.getBody();
+		if (body != null) {
+			this.dynamicsWorld.addRigidBody(e.getBody());
+		}
 		this.allocate((SpoutEntity) e);
 	}
 
@@ -628,12 +632,14 @@ public class SpoutRegion extends Region {
 		if (be == e) {
 			blockEntities.remove(pos);
 		}
-		this.dynamicsWorld.removeRigidBody(e.getBody());
+		RigidBody body = e.getBody();
+		if (body != null) {
+			this.dynamicsWorld.removeRigidBody(e.getBody());
+		}
 		this.deallocate((SpoutEntity)e);
 	}
 
 	public void startTickRun(int stage, long delta) {
-		final float dt = delta / 1000.f;
 		boolean visibleToPlayers = this.entityManager.getPlayers().size() > 0;
 		if (!visibleToPlayers) {
 			//Search for players near to the center of the region
@@ -742,8 +748,7 @@ public class SpoutRegion extends Region {
 							}
 						}
 					}
-					Spout.log("To simulate: " + dynamicsWorld.getNumCollisionObjects());
-	                this.dynamicsWorld.stepSimulation(dt, 3);
+	                this.dynamicsWorld.stepSimulation(delta/1000, 2, 0.1f);
 					for (SpoutEntity ent : resolvers) {
 						try {
 							ent.resolve();

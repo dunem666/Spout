@@ -47,6 +47,7 @@ import org.spout.api.entity.Entity;
 import org.spout.api.entity.EntityComponent;
 import org.spout.api.entity.component.Controller;
 import org.spout.api.entity.component.controller.PlayerController;
+import org.spout.api.entity.component.controller.basic.PointObserver;
 import org.spout.api.event.entity.EntityControllerChangeEvent;
 import org.spout.api.geo.LoadOption;
 import org.spout.api.geo.World;
@@ -133,6 +134,9 @@ public class SpoutEntity extends Tickable implements Entity {
 
 		//TODO Testing, need better defaults
 		//1f is mass, needs to be changed or given a valid default
+		if (controller instanceof PlayerController || controller instanceof PointObserver) {
+			return;
+		}
 		this.body = new RigidBody(1F, new EntityMotionState(this), DEFAULT_BODY);
 	}
 
@@ -749,9 +753,6 @@ public class SpoutEntity extends Tickable implements Entity {
 
 	@Override
 	public void setBody(RigidBody body) {
-		if (body == null) {
-			throw new NullPointerException("Entities' rigid body cannot be null!");
-		}
 		this.body = body;
 	}
 
