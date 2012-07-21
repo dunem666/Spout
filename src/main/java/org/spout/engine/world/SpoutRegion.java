@@ -632,7 +632,7 @@ public class SpoutRegion extends Region {
 		if (be == e) {
 			blockEntities.remove(pos);
 		}
-		removeCollisionObject(e.getBody());
+		//removeCollisionObject(e.getBody());
 		this.deallocate((SpoutEntity)e);
 	}
 
