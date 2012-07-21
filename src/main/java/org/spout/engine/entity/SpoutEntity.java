@@ -208,6 +208,10 @@ public class SpoutEntity extends Tickable implements Entity {
 		return lastTransform.copy();
 	}
 
+	public void setLastTransform() {
+		lastTransform = transform.copy();
+	}
+
 	@Override
 	public void setTransform(Transform transform) {
 		if (activeThreadIsValid("set transform")) {

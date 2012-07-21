@@ -272,13 +272,13 @@ public class SpoutRegion extends Region {
 		//Create the shape for the region
 		SpoutVoxelWorldShape floorShape = new SpoutVoxelWorldShape(this);
 		//Create the motion state of the ground
-		DefaultMotionState groundState = new DefaultMotionState(new Transform(new Matrix4f(new Quat4f(0, 0, 0, 1), new Vector3f(0, -1, 0), 0)));
+		DefaultMotionState groundState = new DefaultMotionState();
 		//Create a collision object for this region
 		RigidBody regionBody = new RigidBody(0, groundState, floorShape);
 		//Simulate the shape in the dynamics world
 		dynamicsWorld.addRigidBody(regionBody);
 		//apply gravity
-		setGravity(new Vector3(0, -10, 0));
+		setGravity(new Vector3(SpoutConfiguration.GRAVITY_X_FACTOR.getFloat(0), SpoutConfiguration.GRAVITY_Y_FACTOR.getFloat(-20), SpoutConfiguration.GRAVITY_Z_FACTOR.getFloat(0)));
 	}
 
 	@Override
@@ -747,6 +747,13 @@ public class SpoutRegion extends Region {
 			case 1: {
 				Profiler.start("startTickRun stage 2");
 				this.dynamicsWorld.stepSimulation(dt, 2, 0.1f);
+				//TODO may not be needed
+				for (SpoutEntity e : entityManager) {
+					if (e.getController() instanceof PlayerController) {
+						e.setLastTransform();
+					}
+				}
+				break;
 			}
 			default: {
 				throw new IllegalStateException("Number of states exceeded limit for SpoutRegion");
