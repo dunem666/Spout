@@ -622,14 +622,7 @@ public class SpoutRegion extends Region {
 				old.kill();
 			}
 		}
-		CollisionObject body = e.getBody();
-		if (body != null && body.getCollisionShape() != null) { //TODO enforce collision shape, will this interfere with GhostObjects?
-			if (body instanceof RigidBody) {
-				this.dynamicsWorld.addRigidBody((RigidBody) body);
-			} else {
-				this.dynamicsWorld.addCollisionObject(body);
-			}
-		}
+		addCollisionObject(e.getBody());
 		this.allocate((SpoutEntity) e);
 	}
 
@@ -639,14 +632,7 @@ public class SpoutRegion extends Region {
 		if (be == e) {
 			blockEntities.remove(pos);
 		}
-		CollisionObject body = e.getBody();
-		if (body != null) {
-			if (body instanceof RigidBody) {
-				this.dynamicsWorld.removeRigidBody((RigidBody) body);
-			} else {
-				this.dynamicsWorld.removeCollisionObject(body);
-			}
-		}
+		removeCollisionObject(e.getBody());
 		this.deallocate((SpoutEntity)e);
 	}
 
@@ -1381,13 +1367,25 @@ public class SpoutRegion extends Region {
 	}
 
 	public void addCollisionObject(CollisionObject object) {
-		if (object == null) {
+		if (object == null || object.getCollisionShape() == null) { //TODO Check shape is null?
 			return;
 		}
 		if (object instanceof RigidBody) {
 			this.dynamicsWorld.addRigidBody((RigidBody) object);
 		} else {
 			this.dynamicsWorld.addCollisionObject(object);
+		}
+	}
+
+	public void removeCollisionObject(CollisionObject object) {
+		if (object == null || object.getCollisionShape() == null) { //TODO Check shape is null?
+			return;
+		}
+
+		if (object instanceof RigidBody) {
+			this.dynamicsWorld.removeRigidBody((RigidBody) object);
+		} else {
+			this.dynamicsWorld.removeCollisionObject(object);
 		}
 	}
 }

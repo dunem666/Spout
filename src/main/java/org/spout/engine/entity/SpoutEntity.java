@@ -434,7 +434,8 @@ public class SpoutEntity extends Tickable implements Entity {
 		if (entityManagerLive.get() != null) {
 			if (entityManager != entityManagerLive.get()) {
 				//Allocate entity
-				entityManagerLive.get().getRegion().addCollisionObject(this.getBody());
+				entityManager.getRegion().removeCollisionObject(body);
+				entityManagerLive.get().getRegion().addCollisionObject(body);
 				entityManagerLive.get().allocate(this);
 			}
 		}
