@@ -36,6 +36,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.bulletphysics.collision.dispatch.CollisionObject;
+import com.bulletphysics.collision.dispatch.GhostObject;
 import com.bulletphysics.collision.shapes.BoxShape;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.linearmath.MotionState;
@@ -71,7 +73,7 @@ import org.spout.engine.world.SpoutRegion;
 
 public class SpoutEntity extends Tickable implements Entity {
 	public static final int NOTSPAWNEDID = -1;
-	private static final BoxShape DEFAULT_BODY = new BoxShape(new Vector3f(2f, 2f, 2f));
+	private static final BoxShape DEFAULT_BODY = new BoxShape(new Vector3f(1f, 1f, 1f));
 	//Thread-safe
 	private final AtomicReference<EntityManager> entityManagerLive;
 	private final AtomicReference<Controller> controllerLive;
@@ -94,7 +96,7 @@ public class SpoutEntity extends Tickable implements Entity {
 	private Model model;
 	private Thread owningThread;
 	private Transform lastTransform = transform;
-	private RigidBody body;
+	private CollisionObject body;
 
 	public SpoutEntity(SpoutEngine engine, Transform transform, Controller controller, int viewDistance, UUID uid, boolean load) {
 		id.set(NOTSPAWNEDID);
@@ -132,9 +134,12 @@ public class SpoutEntity extends Tickable implements Entity {
 			}
 		}
 
-		//TODO Testing, need better defaults
-		//1f is mass, needs to be changed or given a valid default
-		if (controller instanceof PlayerController || controller instanceof PointObserver) {
+		//TODO PointObserver have any RigidBody? Maybe remove this check and enforce valid shapes in SpoutRegion?
+		if (controller instanceof PointObserver) {
+			return;
+		}
+		if (controller instanceof PlayerController) {
+			this.body = new GhostObject();
 			return;
 		}
 		this.body = new RigidBody(1F, new EntityMotionState(this), DEFAULT_BODY);
@@ -752,12 +757,12 @@ public class SpoutEntity extends Tickable implements Entity {
 	}
 
 	@Override
-	public void setBody(RigidBody body) {
+	public void setBody(CollisionObject body) {
 		this.body = body;
 	}
 
 	@Override
-	public RigidBody getBody() {
+	public CollisionObject getBody() {
 		return body;
 	}
 

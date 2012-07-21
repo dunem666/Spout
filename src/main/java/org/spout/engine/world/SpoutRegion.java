@@ -57,12 +57,14 @@ import com.bulletphysics.collision.broadphase.DbvtBroadphase;
 import com.bulletphysics.collision.dispatch.CollisionDispatcher;
 import com.bulletphysics.collision.dispatch.CollisionObject;
 import com.bulletphysics.collision.dispatch.DefaultCollisionConfiguration;
+import com.bulletphysics.collision.dispatch.GhostPairCallback;
 import com.bulletphysics.collision.shapes.voxel.VoxelInfo;
 import com.bulletphysics.dynamics.DiscreteDynamicsWorld;
 import com.bulletphysics.dynamics.DynamicsWorld;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.dynamics.constraintsolver.ConstraintSolver;
 import com.bulletphysics.dynamics.constraintsolver.SequentialImpulseConstraintSolver;
+import com.bulletphysics.dynamics.vehicle.RaycastVehicle;
 import com.bulletphysics.linearmath.DefaultMotionState;
 import com.bulletphysics.linearmath.Transform;
 
@@ -91,6 +93,7 @@ import org.spout.api.material.BlockMaterial;
 import org.spout.api.material.DynamicUpdateEntry;
 import org.spout.api.material.block.BlockFullState;
 import org.spout.api.material.range.EffectRange;
+import org.spout.api.math.MathHelper;
 import org.spout.api.math.Vector3;
 import org.spout.api.player.Player;
 import org.spout.api.protocol.NetworkSynchronizer;
@@ -206,8 +209,6 @@ public class SpoutRegion extends Region {
 	private final CollisionDispatcher dispatcher;
 	private final ConstraintSolver solver;
 	private final DefaultCollisionConfiguration collisionConfiguration;
-	private Vector3 gravity;
-	private long dt = 0;
 
 	public SpoutRegion(SpoutWorld world, float x, float y, float z, RegionSource source) {
 		this(world, x, y, z, source, LoadOption.NO_LOAD);
@@ -264,6 +265,8 @@ public class SpoutRegion extends Region {
 		collisionConfiguration = new DefaultCollisionConfiguration();
 		dispatcher = new CollisionDispatcher(collisionConfiguration);
 		broadphase = new DbvtBroadphase();
+		//Ghost object handler for objects such as player
+		broadphase.getOverlappingPairCache().setInternalGhostPairCallback(new GhostPairCallback());
 		solver = new SequentialImpulseConstraintSolver();
 		dynamicsWorld = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
 		//Create the shape for the region
@@ -619,9 +622,13 @@ public class SpoutRegion extends Region {
 				old.kill();
 			}
 		}
-		RigidBody body = e.getBody();
-		if (body != null) {
-			this.dynamicsWorld.addRigidBody(e.getBody());
+		CollisionObject body = e.getBody();
+		if (body != null && body.getCollisionShape() != null) { //TODO enforce collision shape, will this interfere with GhostObjects?
+			if (body instanceof RigidBody) {
+				this.dynamicsWorld.addRigidBody((RigidBody) body);
+			} else {
+				this.dynamicsWorld.addCollisionObject(body);
+			}
 		}
 		this.allocate((SpoutEntity) e);
 	}
@@ -632,14 +639,19 @@ public class SpoutRegion extends Region {
 		if (be == e) {
 			blockEntities.remove(pos);
 		}
-		RigidBody body = e.getBody();
+		CollisionObject body = e.getBody();
 		if (body != null) {
-			this.dynamicsWorld.removeRigidBody(e.getBody());
+			if (body instanceof RigidBody) {
+				this.dynamicsWorld.removeRigidBody((RigidBody) body);
+			} else {
+				this.dynamicsWorld.removeCollisionObject(body);
+			}
 		}
 		this.deallocate((SpoutEntity)e);
 	}
 
 	public void startTickRun(int stage, long delta) {
+		final float dt = delta / 1000.f;
 		boolean visibleToPlayers = this.entityManager.getPlayers().size() > 0;
 		if (!visibleToPlayers) {
 			//Search for players near to the center of the region
@@ -748,7 +760,7 @@ public class SpoutRegion extends Region {
 							}
 						}
 					}
-	                this.dynamicsWorld.stepSimulation(delta/1000, 2, 0.1f);
+	                this.dynamicsWorld.stepSimulation(dt, 2, 0.1f);
 					for (SpoutEntity ent : resolvers) {
 						try {
 							ent.resolve();
@@ -1378,11 +1390,13 @@ public class SpoutRegion extends Region {
 		return getBlockMaterial(x, y, z);
 	}
 
+	@Override
 	public Vector3 getGravity() {
-		return gravity;
+		return MathHelper.toVector3(this.dynamicsWorld.getGravity(new Vector3f()));
 	}
 
+	@Override
 	public void setGravity(Vector3 gravity) {
-		this.gravity = gravity;
+		this.dynamicsWorld.setGravity(MathHelper.toVector3f(gravity));
 	}
 }
