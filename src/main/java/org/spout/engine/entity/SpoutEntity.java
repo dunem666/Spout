@@ -130,10 +130,13 @@ public class SpoutEntity extends Tickable implements Entity {
 			controller.attachToEntity(this);
 			if (controller instanceof PlayerController) {
 				setObserver(true);
-				this.body = new GhostObject();
+				//this.body = new GhostObject();
 				return;
 			}
-			this.body = new RigidBody(1F, new EntityMotionState(this), DEFAULT_BODY);
+			//Point observer has no collision
+			if (!(controller instanceof PointObserver)) {
+				this.body = new RigidBody(1F, new EntityMotionState(this), DEFAULT_BODY);
+			}
 		}
 	}
 
@@ -431,6 +434,7 @@ public class SpoutEntity extends Tickable implements Entity {
 		if (entityManagerLive.get() != null) {
 			if (entityManager != entityManagerLive.get()) {
 				//Allocate entity
+				entityManagerLive.get().getRegion().addCollisionObject(this.getBody());
 				entityManagerLive.get().allocate(this);
 			}
 		}

@@ -874,7 +874,6 @@ public class SpoutRegion extends Region {
 						if (spoutChunk.isPopulated() && spoutChunk.isDirty()) {
 							spoutChunk.setRenderDirty();
 							for (Entity entity : spoutChunk.getObserversLive()) {
-								//chunk.refreshObserver(entity);
 								if (!(entity.getController() instanceof PlayerController)) {
 									continue;
 								}
@@ -1379,5 +1378,16 @@ public class SpoutRegion extends Region {
 	@Override
 	public void setGravity(Vector3 gravity) {
 		this.dynamicsWorld.setGravity(MathHelper.toVector3f(gravity));
+	}
+
+	public void addCollisionObject(CollisionObject object) {
+		if (object == null) {
+			return;
+		}
+		if (object instanceof RigidBody) {
+			this.dynamicsWorld.addRigidBody((RigidBody) object);
+		} else {
+			this.dynamicsWorld.addCollisionObject(object);
+		}
 	}
 }
