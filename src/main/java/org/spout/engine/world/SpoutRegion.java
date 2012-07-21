@@ -745,34 +745,8 @@ public class SpoutRegion extends Region {
 				break;
 			}
 			case 1: {
-				
 				Profiler.start("startTickRun stage 2");
-				try {
-					//Resolve collisions and prepare for a snapshot.
-					Set<SpoutEntity> resolvers = new HashSet<SpoutEntity>();
-					for (SpoutEntity ent : entityManager) {
-						//Try and determine if we should resolve collisions for this entity
-						//If the entity is not important (not an observer)
-						//And the entity is not visible to players, don't resolve it
-						if (visibleToPlayers || (ent.getController() != null && ent.getController().isImportant())) {
-							if (ent.preResolve()) {
-								resolvers.add(ent);
-							}
-						}
-					}
-	                this.dynamicsWorld.stepSimulation(dt, 2, 0.1f);
-					for (SpoutEntity ent : resolvers) {
-						try {
-							ent.resolve();
-						} catch (Exception e) {
-							Spout.getEngine().getLogger().severe("Unhandled exception during tick resolution for " + ent.toString());
-							e.printStackTrace();
-						}
-					}
-				} finally {
-					Profiler.stop();
-				}
-				break;
+				this.dynamicsWorld.stepSimulation(dt, 2, 0.1f);
 			}
 			default: {
 				throw new IllegalStateException("Number of states exceeded limit for SpoutRegion");
