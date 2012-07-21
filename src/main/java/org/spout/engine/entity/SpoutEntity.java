@@ -406,21 +406,6 @@ public class SpoutEntity extends Tickable implements Entity {
 		return model;
 	}
 
-	// TODO - needs to be made thread safe
-	@Override
-	public void setCollision(CollisionModel model) {
-		collision = model;
-		if (collision != null) {
-			collision.setPosition(this.transform.getPosition());
-		}
-	}
-
-	// TODO - needs to be made thread safe
-	@Override
-	public CollisionModel getCollision() {
-		return collision;
-	}
-
 	@Override
 	public boolean isSpawned() {
 		return id.get() != NOTSPAWNEDID;
