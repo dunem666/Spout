@@ -632,7 +632,7 @@ public class SpoutRegion extends Region {
 		if (be == e) {
 			blockEntities.remove(pos);
 		}
-		//removeCollisionObject(e.getBody());
+		removeCollisionObject(e.getBody());
 		this.deallocate((SpoutEntity)e);
 	}
 
@@ -732,6 +732,7 @@ public class SpoutRegion extends Region {
 			}
 			case 1: {
 				Profiler.start("startTickRun stage 2");
+				Profiler.startAndStop("Bullet Physics");
 				this.dynamicsWorld.stepSimulation(dt, 2, 0.1f);
 				//TODO may not be needed
 				for (SpoutEntity e : entityManager) {
@@ -739,6 +740,7 @@ public class SpoutRegion extends Region {
 						e.setLastTransform();
 					}
 				}
+				Profiler.stop();
 				break;
 			}
 			default: {

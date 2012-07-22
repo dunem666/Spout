@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.CodeSource;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.apache.commons.io.FileUtils;
@@ -51,7 +52,9 @@ import org.spout.api.command.annotated.AnnotatedCommandRegistrationFactory;
 import org.spout.api.command.annotated.SimpleAnnotatedCommandExecutorFactory;
 import org.spout.api.command.annotated.SimpleInjector;
 import org.spout.api.entity.Entity;
+import org.spout.api.geo.LoadOption;
 import org.spout.api.geo.World;
+import org.spout.api.geo.cuboid.Chunk;
 import org.spout.api.geo.cuboid.ChunkSnapshot;
 import org.spout.api.geo.discrete.Point;
 import org.spout.api.geo.discrete.Transform;
@@ -99,7 +102,7 @@ public class SpoutClient extends SpoutEngine implements Client {
 	private PrimitiveBatch renderer;
 	private RenderMaterial material;
 	private Texture texture;
-	private TInt21TripleObjectHashMap<PrimitiveBatch> chunkRenderers = new TInt21TripleObjectHashMap<PrimitiveBatch>();
+	private HashMap<ChunkSnapshot, PrimitiveBatch> chunkRenderers = new HashMap<ChunkSnapshot, PrimitiveBatch>();
 	private VertexBufferBatcher vbBatch;
 	private VertexBufferImpl buffer;
 	private long ticks = 0;
@@ -131,7 +134,7 @@ public class SpoutClient extends SpoutEngine implements Client {
 
 	@Override
 	public void start() {
-		start(false);
+		start(true);
 	}
 
 	@Override
@@ -223,20 +226,19 @@ public class SpoutClient extends SpoutEngine implements Client {
 	}
 
 	private void buildChunk(SpoutChunkSnapshot snap) {
-		boolean firstSeen = !chunkRenderers.containsKey(snap.getX(), snap.getY(), snap.getZ());
-		/*if(!firstSeen && !snap.isRenderDirty()){
-			Spout.log("Got a chunk that isn't dirty or i've seen it before");
-			return;
-		}*/
+		boolean firstSeen = !chunkRenderers.containsKey(snap);
 
+		PrimitiveBatch batch = null;
 		if (firstSeen) {
-			PrimitiveBatch b = new PrimitiveBatch();
+			batch = new PrimitiveBatch();
 			//b.getRenderer().setShader(shader);
-			chunkRenderers.put(snap.getX(), snap.getY(), snap.getZ(), b);
+			chunkRenderers.put(snap, batch);
 			Spout.log("Got a new chunk at " + snap.toString());
 		}
 
-		PrimitiveBatch batch = chunkRenderers.get(snap.getX(), snap.getY(), snap.getZ());
+		if (batch == null) {
+			batch = chunkRenderers.get(snap);
+		}
 
 		for (int x = 0; x < ChunkSnapshot.CHUNK_SIZE; x++) {
 			for (int y = 0; y < ChunkSnapshot.CHUNK_SIZE; y++) {
@@ -244,13 +246,10 @@ public class SpoutClient extends SpoutEngine implements Client {
 					BlockMaterial m = snap.getBlockMaterial(x, y, z);
 
 					Color col = getColor(m);
-					if (m.getCollisionShape() != null) { //TODO Roy, you will need to figure something out here
-						batch.addCube(new Vector3(x, y, z), Vector3.ONE, col, sides);
-					}
+					batch.addCube(new Vector3(x, y, z), Vector3.ONE, col, sides);
 				}
 			}
 		}
-		batch.end();
 		snap.setRenderDirty(false); //Rendered this snapshot
 	}
 
@@ -277,11 +276,7 @@ public class SpoutClient extends SpoutEngine implements Client {
 		Spout.getFilesystem().postStartup();
 
 		activeCamera = new BasicCamera(MathHelper.createPerspective(75, aspectRatio, 0.001f, 1000), MathHelper.createLookAt(new Vector3(0, 10, -5), Vector3.ZERO, Vector3.UP));
-		
-		renderer = new PrimitiveBatch();
 
-		
-		
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		getLogger().info("Loading Texture");
 		textureTest = (BatchVertexRenderer) BatchVertexRenderer.constructNewBatch(GL11.GL_TRIANGLES);
@@ -292,14 +287,6 @@ public class SpoutClient extends SpoutEngine implements Client {
 		vbBatch = new VertexBufferBatcher(GL11.GL_TRIANGLES, buffer);
 
 		cube = (BaseMesh) Spout.getFilesystem().getResource("mesh://Spout/resources/resources/models/cube.obj");
-		
-		
-		loc = new Transform(new Point(null, 0, 0, 0), Quaternion.IDENTITY, Vector3.ONE);
-		
-		renderer.begin(material);		
-		renderer.addMesh(cube);
-		renderer.end();
-
 	}
 
 	private void createWindow() {
@@ -348,23 +335,17 @@ public class SpoutClient extends SpoutEngine implements Client {
 
 		ticks++;
 
-		double cx = 2 * Math.sin(Math.toRadians(ticks));
-		double cz = 2 * Math.cos(Math.toRadians(ticks));
-		double cy = 2 * Math.sin(Math.toRadians(ticks));
-		
-		loc.setRotation(MathHelper.rotation((float)Math.toDegrees(cx), (float)Math.toDegrees(cy), (float)Math.toDegrees(cz)));
-		loc.setScale(new Vector3((float)(cx + 2.1), (float)(cx + 2.1), (float)(cz * 2.1)));
-
-		Matrix view = MathHelper.createLookAt(new Vector3(cx, cy, cz), Vector3.ZERO, Vector3.UP);
-
 		material.getShader().setUniform("View", activeCamera.getView());
 		material.getShader().setUniform("Projection", activeCamera.getProjection());
-		material.getShader().setUniform("Model", loc.toMatrix());
+		material.getShader().setUniform("Model", Spout.getEngine().getDefaultWorld().getSpawnPoint().toMatrix());
+		renderVisibleChunks((SpoutWorld) Spout.getEngine().getDefaultWorld());
 
-		renderer.draw();
-
-		
-
+		for (PrimitiveBatch toRender : chunkRenderers.values()) {
+			toRender.begin(material);
+			toRender.addMesh(cube);
+			toRender.end();
+			toRender.draw();
+		}
 	}
 
 	private void renderVisibleChunks(SpoutWorld world) {
@@ -380,10 +361,9 @@ public class SpoutClient extends SpoutEngine implements Client {
 	}
 
 	private Color getColor(BlockMaterial m) {
-		//TODO Here as well Roy
-//		if (!m.isSolid()) {
-//			return new Color(0, 0, 0);
-//		}
+		if (!m.hasCollision()) {
+			return new Color(0, 0, 0, 0);
+		}
 		switch (m.getId()) {
 			case 78:
 				return new Color(255, 255, 255);
