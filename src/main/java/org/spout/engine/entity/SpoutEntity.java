@@ -59,6 +59,7 @@ import org.spout.api.geo.discrete.Point;
 import org.spout.api.geo.discrete.Transform;
 import org.spout.api.math.IntVector3;
 import org.spout.api.math.MathHelper;
+import org.spout.api.math.Matrix;
 import org.spout.api.math.Quaternion;
 import org.spout.api.math.Vector3;
 import org.spout.api.model.Model;
@@ -683,6 +684,13 @@ public class SpoutEntity extends Tickable implements Entity {
 	@Override
 	public CollisionObject getBody() {
 		return body;
+	}
+
+	public Matrix getModelMatrix() {
+		Matrix trans = MathHelper.translate(transform.getPosition());
+		Matrix rot = MathHelper.rotate(transform.getRotation());
+
+		return rot.multiply(trans);
 	}
 
 	private class EntityMotionState extends MotionState {

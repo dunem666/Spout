@@ -100,8 +100,8 @@ import org.spout.api.protocol.NetworkSynchronizer;
 import org.spout.api.scheduler.TaskManager;
 import org.spout.api.scheduler.TaskPriority;
 import org.spout.api.scheduler.TickStage;
-import org.spout.api.util.cuboid.CuboidShortBuffer;
 import org.spout.api.util.Profiler;
+import org.spout.api.util.cuboid.CuboidShortBuffer;
 import org.spout.api.util.set.TByteTripleHashSet;
 import org.spout.api.util.thread.DelayedWrite;
 import org.spout.api.util.thread.LiveRead;
@@ -1309,6 +1309,11 @@ public class SpoutRegion extends Region {
 	@Override
 	public void resetDynamicBlock(int x, int y, int z) {
 		dynamicBlockTree.resetBlockUpdates(x, y, z);
+	}
+	
+	@Override
+	public void syncResetDynamicBlock(int x, int y, int z) {
+		dynamicBlockTree.syncResetBlockUpdates(x, y, z);
 	}
 
 	@Override
